@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+
+  # Docker Mailserver
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: mailserver
+    hostname: mail
+    domainname: domain.com
+    ports:
+      - "25:25"      # SMTP
+      - "143:143"    # IMAP
+      - "465:465"    # SMTPS
+      - "587:587"    # Submission
+      - "993:993"    # IMAPS
+    volumes:
+      - ./maildata:/var/mail
+      - ./mailstate:/var/mail-state
+      - ./maillogs:/var/log/mail
+      - ./config/:/tmp/docker-mailserver/
+      - /etc/letsencrypt:/etc/letsencrypt
+    environment:
+      - SSL_TYPE=letsencrypt
+      - ENABLE_FAIL2BAN=1
+      - ENABLE_POSTGREY=1
+      - ONE_DIR=1
+      - DMS_DEBUG=0
+      - PERMIT_DOCKER=network
+      - ENABLE_SPAMASSASSIN=1
+      - SPAMASSASSIN_SPAM_TO_INBOX=1
+      - ENABLE_CLAMAV=1
+      - ENABLE_POSTGREY=1
+      - POSTGREY_DELAY=300
+      - ENABLE_SASLAUTHD=0
+      - OVERRIDE_HOSTNAME=mail.domain.com
+      - POSTMASTER_ADDRESS=postmaster@domain.com
+      - POSTFIX_MAILBOX_SIZE_LIMIT=0
+      - ENABLE_QUOTAS=1
+      - POSTSCREEN_ACTION=enforce
+      - SMTP_ONLY=0
+      - SSL_CERT_PATH=/etc/letsencrypt/live/mail.domain.com/fullchain.pem
+      - SSL_KEY_PATH=/etc/letsencrypt/live/mail.domain.com/privkey.pem
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_PTRACE
